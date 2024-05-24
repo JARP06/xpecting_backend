@@ -42,37 +42,58 @@ export async function createAppointment(req, res, _next) {
 }
 
 // get all appointments
-export async function allAppointments(req, res, _next) {
-    const sqlQuery = `
-        SELECT a.*, c.category, u.f_name, u.l_name
-        FROM appointments a
-        INNER JOIN carers c ON a.carer_id = c.id
-        INNER JOIN users u ON a.user_id = u.id
-    `;
-    try {
-        const [appointments] = await pool.query(sqlQuery);
+export async function allAppointments(req, res) {
+  const loggedInUserId = req.user?.id;
 
-        if (appointments.length <= 0) {
-            return res.status(404).json({
-                status: "error",
-                message: "No appointments found"
-            });
-        } else {
-            return res.status(200).json({
-                status: "success",
-                recordCount: appointments.length,
-                data: appointments
-            });
-        }
-    } catch (error) {
-        console.error(error);
+  if (!loggedInUserId) {
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
+      status: 'error',
+      message: 'User ID not found in request',
+    });
+  }
 
-        return res.status(500).json({
-            status: "error",
-            message: "Failed to retrieve appointments"
-        });
+  const sqlQuery = `
+    SELECT a.*, c.category, u.f_name, u.l_name
+    FROM appointments a
+    INNER JOIN carers c ON a.carer_id = c.id
+    INNER JOIN users u ON a.user_id = u.id
+    WHERE a.user_id = ?
+  `;
+
+  try {
+    const [appointments] = await pool.query(sqlQuery, [loggedInUserId]);
+
+    if (appointments.length <= 0) {
+      return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
+        status: 'error',
+        message: 'No appointments found',
+      });
+    } else {
+      return res.status(HTTP_STATUS_CODES.OK).json({
+        status: 'success',
+        recordCount: appointments.length,
+        data: appointments,
+      });
     }
+  } catch (error) {
+    console.error(error);
+
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      status: 'error',
+      message: 'Failed to retrieve appointments',
+      error: error.message,
+    });
+  }
 }
+
+const HTTP_STATUS_CODES = {
+  OK: 200,
+  BAD_REQUEST: 400,
+  NOT_FOUND: 404,
+  INTERNAL_SERVER_ERROR: 500,
+};
+
+
 
 // get single appointment 
 export async function singleAppointment(req, res, _next) {
@@ -145,6 +166,42 @@ export async function updateAppointment(req, res, _next) {
   }
 }
 
+// Get the next upcoming appointment for the logged-in user
+export async function getUpcomingAppointment(req, res, _next) {
+  const sqlQuery = `
+    SELECT appointment_id, carer_id, scheduled_time, details
+    FROM appointments
+    WHERE user_id = ? AND scheduled_time > NOW()
+    ORDER BY scheduled_time ASC
+    LIMIT 1
+  `;
+
+  const userId = req.user.id; // Assuming req.user contains the authenticated user's details
+
+  try {
+    const [upcomingAppointment] = await pool.query(sqlQuery, [userId]);
+
+    if (upcomingAppointment.length === 0) {
+      res.status(404).json({
+        status: "error",
+        message: "No upcoming appointments found for this user",
+      });
+    } else {
+      res.status(200).json({
+        status: "success",
+        appointment: upcomingAppointment[0],
+      });
+    }
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      status: "error",
+      message: "Failed to retrieve the upcoming appointment",
+    });
+  }
+}
+
 //delete appointment 
 
 export async function deleteAppointment(req, res, _next) {
@@ -163,7 +220,7 @@ export async function deleteAppointment(req, res, _next) {
       });
     }else{
       res.status(200).json({
-        status: "successful",
+        status: "success",
         message:"appointment deleted"
       });
     }

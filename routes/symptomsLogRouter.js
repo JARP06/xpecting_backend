@@ -7,16 +7,16 @@
 
 //imports
 import express from "express";
-import { allSymptomsLogged, createSymptomLog, deleteLoggedSymptom, singleLoggedSymptom, updateLoggedSymptom } from "../controllers/symptomsLogController.js";
+import { allSymptomsLogged, createSymptomLog, deleteLoggedSymptom, getMostRecentLoggedSymptom, singleLoggedSymptom, updateLoggedSymptom } from "../controllers/symptomsLogController.js";
+import { isAuthenticated } from "../controllers/authController.js";
 
 export const symptomsLogRouter = express.Router();
 
 //routes
-symptomsLogRouter.post("/", createSymptomLog)   //create symptom log
-
-symptomsLogRouter.get("/", allSymptomsLogged) // get all symptoms 
-symptomsLogRouter.get("/:id", singleLoggedSymptom) //get single symptom
-
-symptomsLogRouter.patch("/:id", updateLoggedSymptom) //update symptom log
-symptomsLogRouter.delete("/:id", deleteLoggedSymptom) //delete symptom log
+symptomsLogRouter.post('/symptoms/log', isAuthenticated, createSymptomLog);
+symptomsLogRouter.get('/symptoms/log', isAuthenticated, allSymptomsLogged);
+symptomsLogRouter.get('/symptoms/log/:id', isAuthenticated, singleLoggedSymptom);
+symptomsLogRouter.put('/symptoms/log/:id', isAuthenticated, updateLoggedSymptom);
+symptomsLogRouter.delete('/symptoms/log/:id', isAuthenticated, deleteLoggedSymptom);
+symptomsLogRouter.get('/symptoms/most-recent', isAuthenticated, getMostRecentLoggedSymptom);
 

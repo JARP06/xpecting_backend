@@ -7,15 +7,19 @@
 
 //imports
 import express from "express";
-import { allAppointments, createAppointment, deleteAppointment, singleAppointment, updateAppointment } from "../controllers/appointmentController.js";
+import { allAppointments, createAppointment, deleteAppointment, getUpcomingAppointment, singleAppointment, updateAppointment } from "../controllers/appointmentController.js";
+import { isAuthenticated } from "../controllers/authController.js";
 
 export const appointmentRouter = express.Router();
 
+// Use authentication middleware for protected routes
+// appointmentRouter.use(isAuthenticated);
 //routes
-appointmentRouter.post("/", createAppointment) //create an appointment
+appointmentRouter.post("/",isAuthenticated, createAppointment) //create an appointment
 
-appointmentRouter.get("/", allAppointments) //get all appointment for user
+appointmentRouter.get("/",isAuthenticated ,allAppointments) //get all appointment for user
 appointmentRouter.get("/:id", singleAppointment) //single appointment for user 
+// appointmentRouter.get("/upcoming-appointment", getUpcomingAppointment)
 
 
 appointmentRouter.patch("/:id", updateAppointment) //edit and update appointment 
