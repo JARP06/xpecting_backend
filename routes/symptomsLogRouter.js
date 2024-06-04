@@ -13,8 +13,8 @@ import { isAuthenticated } from "../controllers/authController.js";
 export const symptomsLogRouter = express.Router();
 
 //routes
-symptomsLogRouter.post('/symptoms/log', isAuthenticated, createSymptomLog);
-symptomsLogRouter.get('/symptoms/log', isAuthenticated, allSymptomsLogged);
+symptomsLogRouter.post('/', isAuthenticated, createSymptomLog);
+symptomsLogRouter.get('/', isAuthenticated, allSymptomsLogged);
 symptomsLogRouter.get('/symptoms/log/:id', isAuthenticated, singleLoggedSymptom);
 symptomsLogRouter.put('/symptoms/log/:id', isAuthenticated, updateLoggedSymptom);
 symptomsLogRouter.delete('/symptoms/log/:id', isAuthenticated, deleteLoggedSymptom);

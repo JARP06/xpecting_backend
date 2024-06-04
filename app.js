@@ -10,6 +10,8 @@ import { symptomsLogRouter } from "./routes/symptomsLogRouter.js";
 import { carerRouter } from "./routes/carerRouter.js";
 import { symptomRouter } from "./routes/symptomRouter.js";
 import { authRouter } from "./routes/authRouter.js";
+import { emailRouter } from "./routes/emailRouter.js";
+
 
 const app= express();
 const port = process.env.PORT || 4444
@@ -46,7 +48,10 @@ app.use("/api/v1/xpecting/appointment/", appointmentRouter);
 app.use("/api/v1/xpecting/auth/", authRouter); 
 app.use("/api/v1/xpecting/symptoms-tracker/", symptomsLogRouter); 
 app.use("/api/v1/xpecting/carers/", carerRouter); 
-app.use("/api/v1/xpecting/symptoms/", symptomRouter); 
+app.use("/api/v1/xpecting/symptoms/", symptomRouter);
+app.use("/api/v1/xpecting/email", emailRouter); // email
+
+
  
 
 app.listen(port, () => console.log(`server running on http://localhost:${port}`));

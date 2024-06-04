@@ -288,3 +288,13 @@ export const resetPassword = async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 };
+
+export default {
+    signup,
+    login,
+    logout,
+    isAuthenticated,
+    getUserProfile,
+    resetPassword,
+    sessionData 
+};

@@ -12,7 +12,7 @@ import {pool} from "../database/dbConnection.js";
 //create a symptom log
  export async function addNewCarer (req, res, _next) {
     const sqlQuery = `
-    INSERT INTO carer(category)
+    INSERT INTO carers (category)
     VALUES(?)
     `;
     try{

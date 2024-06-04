@@ -7,39 +7,60 @@
 
 // import
 import {pool} from "../database/dbConnection.js";
+import { sendEmail } from "./emailController.js"; 
 
-// todo create appointment
+// create appointment
 export async function createAppointment(req, res, _next) {
   const sqlQuery = `
-    INSERT INTO appointments(user_id, carer_id, scheduled_time)
-    VALUES(?,?,?)
+    INSERT INTO appointments(user_id, carer_id, scheduled_time, note)
+    VALUES(?,?,?,?)
   `;
-  try{
-    const { user_id, carer_id, scheduled_time } = req.body;
-    const [newAppointment]= await pool.query(sqlQuery,[user_id, carer_id, scheduled_time]);
-
-    res.status(201).json({
-        status:"success",
-        appointmentId: newAppointment.insertId,
-    });
-  }catch(error) {
-    console.log(error);
-
-    //handle dups
-    if (error.code === "ER_DUP_ENTRY") {
-        return res.status(400).json({
-          status: "error",
-          message: "Duplicate appointment entry"
-        });
-      }
-      
-
-    res.status(400).json({
+  try {
+    const { user_id, carer_id, scheduled_time, note } = req.body;
+    
+    // Validate input data (this can be expanded based on your requirements)
+    if (!user_id || !carer_id || !scheduled_time) {
+      return res.status(400).json({
         status: "error",
-        message: "Failed to create new appointment"
+        message: "Missing required fields",
+      });
+    }
+    
+    const [newAppointment] = await pool.query(sqlQuery, [user_id, carer_id, scheduled_time, note]);
+    
+    // Attach user info to the request object for the email function
+    req.user = {
+      id: req.user.id,
+      f_name: req.user.f_name,
+      l_name: req.user.l_name,
+      email: req.user.email
+    };
+    
+    // Call sendEmail function after successfully creating the appointment
+    await sendEmail(req, res);
+    
+    res.status(201).json({
+      status: "success",
+      message: "Appointment created successfully",
+      data: newAppointment
     });
+  } catch (error) {
+    console.error('Error creating appointment:', error);
+    
+    if (error.code === "ER_DUP_ENTRY") {
+      return res.status(400).json({
+        status: "error",
+        message: "Duplicate appointment entry",
+      });
+    } else {
+      return res.status(500).json({
+        status: "error",
+        message: "Failed to create new appointment",
+      });
+    }
   }
 }
+
 
 // get all appointments
 export async function allAppointments(req, res) {
@@ -52,16 +73,31 @@ export async function allAppointments(req, res) {
     });
   }
 
-  const sqlQuery = `
-    SELECT a.*, c.category, u.f_name, u.l_name
-    FROM appointments a
-    INNER JOIN carers c ON a.carer_id = c.id
-    INNER JOIN users u ON a.user_id = u.id
-    WHERE a.user_id = ?
-  `;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const offset = (page - 1) * limit;
 
   try {
-    const [appointments] = await pool.query(sqlQuery, [loggedInUserId]);
+    // Query to count total records
+    const countQuery = `
+      SELECT COUNT(*) AS count
+      FROM appointments a
+      INNER JOIN carers c ON a.carer_id = c.id
+      INNER JOIN users u ON a.user_id = u.id
+    `;
+    const [countResult] = await pool.query(countQuery);
+    const totalRecords = countResult[0].count;
+    const totalPages = Math.ceil(totalRecords / limit);
+
+    // Query to fetch appointments with pagination
+    const sqlQuery = `
+      SELECT a.*, c.category, u.f_name, u.l_name
+      FROM appointments a
+      INNER JOIN carers c ON a.carer_id = c.id
+      INNER JOIN users u ON a.user_id = u.id
+      LIMIT ? OFFSET ?
+    `;
+    const [appointments] = await pool.query(sqlQuery, [limit, offset]);
 
     if (appointments.length <= 0) {
       return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
@@ -72,6 +108,9 @@ export async function allAppointments(req, res) {
       return res.status(HTTP_STATUS_CODES.OK).json({
         status: 'success',
         recordCount: appointments.length,
+        totalRecords: totalRecords,
+        totalPages: totalPages,
+        currentPage: page,
         data: appointments,
       });
     }
@@ -85,6 +124,7 @@ export async function allAppointments(req, res) {
     });
   }
 }
+
 
 const HTTP_STATUS_CODES = {
   OK: 200,
@@ -134,16 +174,16 @@ export async function singleAppointment(req, res, _next) {
 export async function updateAppointment(req, res, _next) {
   const sqlQuery = `
     UPDATE appointments
-    SET carer_id = ?, scheduled_time = ?
+    SET carer_id = ?, scheduled_time = ?, note = ?
     WHERE id = ?
   `;
 
   const aId = req.params.id;
 
   try {
-    const { carer_id, scheduled_time } = req.body;
+    const { carer_id, scheduled_time, note } = req.body;
 
-    const [updateAppt] = await pool.query(sqlQuery, [carer_id, scheduled_time, aId]);
+    const [updateAppt] = await pool.query(sqlQuery, [carer_id, scheduled_time, note, aId]);
 
     if (updateAppt.affectedRows <= 0) {
       res.status(404).json({
@@ -169,7 +209,7 @@ export async function updateAppointment(req, res, _next) {
 // Get the next upcoming appointment for the logged-in user
 export async function getUpcomingAppointment(req, res, _next) {
   const sqlQuery = `
-    SELECT appointment_id, carer_id, scheduled_time, details
+    SELECT appointment_id, carer_id, scheduled_time, note
     FROM appointments
     WHERE user_id = ? AND scheduled_time > NOW()
     ORDER BY scheduled_time ASC
@@ -202,11 +242,10 @@ export async function getUpcomingAppointment(req, res, _next) {
   }
 }
 
-//delete appointment 
-
+// Delete appointment
 export async function deleteAppointment(req, res, _next) {
-  const sqlQuery=`
-    DELETE FROM appointment
+  const sqlQuery = `
+    DELETE FROM appointments
     WHERE id = ?
   `;
   const aId =  req.params.id;

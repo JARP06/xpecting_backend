@@ -14,6 +14,7 @@ export const appointmentRouter = express.Router();
 
 // Use authentication middleware for protected routes
 // appointmentRouter.use(isAuthenticated);
+
 //routes
 appointmentRouter.post("/",isAuthenticated, createAppointment) //create an appointment
 
