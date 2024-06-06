@@ -20,7 +20,6 @@ appointmentRouter.post("/",isAuthenticated, createAppointment) //create an appoi
 
 appointmentRouter.get("/",isAuthenticated ,allAppointments) //get all appointment for user
 appointmentRouter.get("/:id", singleAppointment) //single appointment for user 
-// appointmentRouter.get("/upcoming-appointment", getUpcomingAppointment)
 
 
 appointmentRouter.patch("/:id", updateAppointment) //edit and update appointment 

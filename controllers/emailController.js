@@ -1,4 +1,3 @@
-// emailController.js
 import nodemailer from 'nodemailer';
 import { pool } from '../database/dbConnection.js';
 
@@ -12,6 +11,19 @@ export async function sendEmail(req, res) {
 
         if (!user_id) {
             throw new Error('User ID is required');
+        }
+
+        // Check if appointment already exists
+        const appointmentExistsQuery = `
+            SELECT COUNT(*) AS count
+            FROM appointments
+            WHERE user_id = ? AND carer_id = ? AND scheduled_time = ?
+        `;
+
+        const [existingAppointments] = await pool.query(appointmentExistsQuery, [user_id, carer_id, scheduled_time]);
+
+        if (existingAppointments[0].count > 0) {
+            throw new Error('Appointment already exists for this user with the same carer and scheduled time');
         }
 
         const query = `INSERT INTO appointments (user_id, carer_id, scheduled_time, note) VALUES (?, ?, ?, ?)`;
@@ -74,32 +86,5 @@ export async function sendEmail(req, res) {
     } catch (error) {
         console.error('Error sending email:', error.message);
     }
+    
 }
-
-
-// Assuming you're sending user data in the request body
-export const sendEmailAfterSignup = (user) => {
-  // Email content
-  const mailOptions = {
-    from: "your-mailtrap-inbox@example.com",
-    to: user.email,
-    subject: "Welcome to Our Platform!",
-    text: `
-            Dear ${user.firstName} ${user.lastName},
-            
-            Thank you for signing up with us! We're excited to have you on board.
-            
-            Best regards,
-            The Team
-        `,
-  };
-
-  // Send the email
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error("Error sending email:", error);
-    } else {
-      console.log("Email sent:", info.response);
-    }
-  });
-};

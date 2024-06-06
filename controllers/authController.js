@@ -246,55 +246,44 @@ export const getUserProfile = async (req, res, next) => {
         });
     }
 };
-
 // Function to reset the password
-export const resetPassword = async (req, res) => {
+// Function to reset the password
+export const resetPassword = async (req, res, next) => {
     try {
-        const { currentPassword, newPassword } = req.body;
+        const { currentPassword, newPassword, confirmNewPassword } = req.body;
         const uId = req.params.id;
+
+        // Check if new password matches the confirm new password
+        if (newPassword !== confirmNewPassword) {
+            return res.status(400).json({ status: "error", message: "New password and confirm new password do not match" });
+        }
 
         // Check if current password matches the one stored in the database
         const [user] = await pool.query(
-            `
-            SELECT * FROM users
-            WHERE id = ?
-            `,
+            `SELECT * FROM users WHERE id = ?`,
             [uId]
         );
         if (!user.length) {
-            return res.status(404).json({ error: "error", message: "User not found" });
+            return res.status(404).json({ status: "error", message: "User not found" });
         }
 
         // Check if current password is correct
         const isMatch = await decryptPW(currentPassword, user[0].password);
         if (!isMatch) {
-            return res.status(400).json({ error: "error", message: "Current password is incorrect" });
+            return res.status(400).json({ status: "error", message: "Current password is incorrect" });
         }
 
         // Update the user's password
         const newPW = await encryptPW(newPassword);
         await pool.query(
-            `
-            UPDATE users
-            SET password = ?
-            WHERE id = ?
-            `,
+            `UPDATE users SET password = ? WHERE id = ?`,
             [newPW, uId]
         );
 
         res.status(200).json({ status: "success", message: "Password updated successfully" });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Internal Server Error" });
+        res.status(500).json({ status: "error", message: "Internal Server Error" });
     }
 };
 
-export default {
-    signup,
-    login,
-    logout,
-    isAuthenticated,
-    getUserProfile,
-    resetPassword,
-    sessionData 
-};

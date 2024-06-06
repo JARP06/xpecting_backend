@@ -8,7 +8,6 @@
 // Import necessary modules
 import express from "express";
 import { getUserProfile, isAuthenticated, login, logout, resetPassword, signup } from "../controllers/authController.js";
-import { getMostRecentLoggedSymptom } from "../controllers/symptomsLogController.js";
 
 // Create a new router
 export const authRouter = express.Router();

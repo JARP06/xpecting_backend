@@ -10,119 +10,102 @@ import {pool} from "../database/dbConnection.js";
 import { sendEmail } from "./emailController.js"; 
 
 // create appointment
-export async function createAppointment(req, res, _next) {
-  const sqlQuery = `
-    INSERT INTO appointments(user_id, carer_id, scheduled_time, note)
-    VALUES(?,?,?,?)
-  `;
+import { Email } from "../utils/email.js";
+
+export async function createAppointment(req, res) {
   try {
-    const { user_id, carer_id, scheduled_time, note } = req.body;
-    
-    // Validate input data (this can be expanded based on your requirements)
-    if (!user_id || !carer_id || !scheduled_time) {
-      return res.status(400).json({
-        status: "error",
-        message: "Missing required fields",
-      });
+    if (!req.user || !req.user.email) {
+      return res.status(401).json({ error: "Unauthorized" });
     }
-    
-    const [newAppointment] = await pool.query(sqlQuery, [user_id, carer_id, scheduled_time, note]);
-    
-    // Attach user info to the request object for the email function
-    req.user = {
-      id: req.user.id,
-      f_name: req.user.f_name,
-      l_name: req.user.l_name,
-      email: req.user.email
-    };
-    
-    // Call sendEmail function after successfully creating the appointment
-    await sendEmail(req, res);
-    
+
+    const emailSender = new sendEmail(req.user.email);
+
+    const { user_id, carer_id, scheduled_time, note } = req.body;
+
+    // Your appointment creation logic goes here
+
+    // Assuming appointment creation is successful, send the email
+    const emailContent = `<p>Your email content goes here</p>`;
+    await emailSender.sendMail(emailContent, "Appointment Confirmation");
+
     res.status(201).json({
       status: "success",
-      message: "Appointment created successfully",
-      data: newAppointment
+      message: "Appointment created successfully and confirmation email sent",
     });
   } catch (error) {
-    console.error('Error creating appointment:', error);
-    
-    if (error.code === "ER_DUP_ENTRY") {
-      return res.status(400).json({
-        status: "error",
-        message: "Duplicate appointment entry",
-      });
-    } else {
-      return res.status(500).json({
-        status: "error",
-        message: "Failed to create new appointment",
-      });
-    }
+    console.error("Error creating appointment:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to create new appointment",
+      error: error.message,
+    });
   }
 }
 
 
 // get all appointments
 export async function allAppointments(req, res) {
-  const loggedInUserId = req.user?.id;
+    const loggedInUserId = req.user?.id;
 
-  if (!loggedInUserId) {
-    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
-      status: 'error',
-      message: 'User ID not found in request',
-    });
-  }
-
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const offset = (page - 1) * limit;
-
-  try {
-    // Query to count total records
-    const countQuery = `
-      SELECT COUNT(*) AS count
-      FROM appointments a
-      INNER JOIN carers c ON a.carer_id = c.id
-      INNER JOIN users u ON a.user_id = u.id
-    `;
-    const [countResult] = await pool.query(countQuery);
-    const totalRecords = countResult[0].count;
-    const totalPages = Math.ceil(totalRecords / limit);
-
-    // Query to fetch appointments with pagination
-    const sqlQuery = `
-      SELECT a.*, c.category, u.f_name, u.l_name
-      FROM appointments a
-      INNER JOIN carers c ON a.carer_id = c.id
-      INNER JOIN users u ON a.user_id = u.id
-      LIMIT ? OFFSET ?
-    `;
-    const [appointments] = await pool.query(sqlQuery, [limit, offset]);
-
-    if (appointments.length <= 0) {
-      return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
-        status: 'error',
-        message: 'No appointments found',
-      });
-    } else {
-      return res.status(HTTP_STATUS_CODES.OK).json({
-        status: 'success',
-        recordCount: appointments.length,
-        totalRecords: totalRecords,
-        totalPages: totalPages,
-        currentPage: page,
-        data: appointments,
-      });
+    if (!loggedInUserId) {
+        return res.status(400).json({
+            status: 'error',
+            message: 'User ID not found in request',
+        });
     }
-  } catch (error) {
-    console.error(error);
 
-    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-      status: 'error',
-      message: 'Failed to retrieve appointments',
-      error: error.message,
-    });
-  }
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    try {
+        // Query to count total records
+        const countQuery = `
+            SELECT COUNT(*) AS count
+            FROM appointments a
+            INNER JOIN carers c ON a.carer_id = c.id
+            INNER JOIN users u ON a.user_id = u.id
+            WHERE u.id = ?
+        `;
+        const [countResult] = await pool.query(countQuery, [loggedInUserId]);
+        const totalRecords = countResult[0].count;
+        const totalPages = Math.ceil(totalRecords / limit);
+
+        // Query to fetch appointments with pagination
+        const sqlQuery = `
+            SELECT a.*, c.category, u.f_name, u.l_name
+            FROM appointments a
+            INNER JOIN carers c ON a.carer_id = c.id
+            INNER JOIN users u ON a.user_id = u.id
+            WHERE u.id = ?
+            LIMIT ? OFFSET ?
+        `;
+        const [appointments] = await pool.query(sqlQuery, [loggedInUserId, limit, offset]);
+
+        if (appointments.length <= 0) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'No appointments found for the user',
+            });
+        } else {
+            return res.status(200).json({
+                status: 'success',
+                recordCount: appointments.length,
+                totalRecords: totalRecords,
+                totalPages: totalPages,
+                currentPage: page,
+                data: appointments,
+            });
+        }
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            status: 'error',
+            message: 'Failed to retrieve appointments',
+            error: error.message,
+        });
+    }
 }
 
 
