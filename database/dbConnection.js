@@ -1,3 +1,10 @@
+/**
+ * Filename: 		dbConnection.js
+ * Description:
+ * Developed By: 	Toni-Ann Neil
+ * Date: 			2024-05-05
+ */
+
 import mysql from "mysql2";
 import dotenv from "dotenv";
 

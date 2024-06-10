@@ -143,7 +143,7 @@ export async function logout(req, res, next) {
             });
         }
     } catch (error) {
-        console.log(error);
+        
 
         res.status(404).json({
             status: "error",
@@ -156,7 +156,7 @@ export const isAuthenticated = async (req, res, next) => {
     const authorization = req.get("Authorization");
 
     if (!authorization || !authorization.startsWith("Bearer ")) {
-        console.log("Authorization header missing or malformed");
+        
         return res.status(400).json({
             status: "error",
             message: "Unauthorized user, please login to view content.",
@@ -167,7 +167,7 @@ export const isAuthenticated = async (req, res, next) => {
 
     try {
         const decoded = JWT.verify(token, process.env.JWT_SECRET);
-        console.log("Token decoded:", decoded);
+        
 
         const [users] = await pool.query(
             `SELECT * FROM users WHERE id = ?`,
@@ -175,7 +175,7 @@ export const isAuthenticated = async (req, res, next) => {
         );
 
         if (!users.length) {
-            console.log("No user found with this token");
+            
             return res.status(404).json({
                 status: "error",
                 message: "Token is invalid or error in validation process",
@@ -185,7 +185,7 @@ export const isAuthenticated = async (req, res, next) => {
         const user = users[0];
         user.password = undefined; // Remove the password from the user object
         req.user = user;
-        console.log("User attached to request:", user);
+        
         next();
     } catch (error) {
         console.error(error);
@@ -208,7 +208,7 @@ export const isAuthenticated = async (req, res, next) => {
 export const getUserProfile = async (req, res, next) => {
     try {
         const data = req.user;
-        console.log("================= DATA ===============", data);
+        
 
         // Ensure you pass the user ID as a parameter to the query
         const [user] = await pool.query(
@@ -229,7 +229,7 @@ export const getUserProfile = async (req, res, next) => {
 
         // Remove sensitive data
         user[0].password = undefined;
-        console.log(`USER DATA ====> ${user[0]}`);
+        
 
         // Respond with user data
         res.status(200).json({

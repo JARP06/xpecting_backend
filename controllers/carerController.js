@@ -24,7 +24,7 @@ import {pool} from "../database/dbConnection.js";
             symptomID: newSymLog.insertId
         });
     }catch(error){
-        console.log(error);
+        
 
         res.status(400).json({
             status:"error",
@@ -88,7 +88,7 @@ export async function singleCarer(req, res, _next) {
             });
         }
     }catch (error) {
-        console.log(error);
+        
 
         res.status(404).json({
             status: "error",
@@ -124,7 +124,7 @@ export async function updateCarer(req, res, _next){
             });
         }
     }catch (error) {
-        console.log(error);
+        
 
         res.status(404).json({
             status: "error",
@@ -156,7 +156,7 @@ export async function deleteCarer(req, res, _next){
             });
         }
     } catch(error) {
-        console.log(error);
+        
 
         res.status(404).json({
             status: "error",

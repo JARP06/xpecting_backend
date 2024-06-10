@@ -27,9 +27,9 @@ export async function encryptPW(password) {
  */
 export async function decryptPW(password, encryptedPW) {
     try {
-        console.log("Decrypting password...");
-        console.log("Password:", password);
-        console.log("Encrypted Password:", encryptedPW);
+        
+        
+        
         
         // Ensure both password and encryptedPW are defined
         if (!password || !encryptedPW) {

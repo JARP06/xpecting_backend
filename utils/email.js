@@ -1,3 +1,10 @@
+/**
+ * Filename: 		email.js
+ * Description:    
+ * Developed By: 	Toni-Ann Neil
+ * Date: 			2024-06-03
+ */
+
 import nodemailer from 'nodemailer';
 
 export class Email {

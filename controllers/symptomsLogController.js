@@ -23,7 +23,7 @@ export async function createSymptomLog(req, res, _next) {
       symptomID: newSymLog.insertId
     });
   } catch (error) {
-    console.log(error);
+    
 
     res.status(400).json({
       status: "error",
@@ -110,7 +110,7 @@ export async function singleLoggedSymptom(req, res, _next) {
       });
     }
   } catch (error) {
-    console.log(error);
+    
 
     res.status(404).json({
       status: "error",
@@ -149,7 +149,7 @@ export async function updateLoggedSymptom(req, res, _next) {
       });
     }
   } catch (error) {
-    console.log(error);
+    
 
     res.status(404).json({
       status: "error",
@@ -180,7 +180,7 @@ export async function deleteLoggedSymptom(req, res, _next) {
       });
     }
   } catch (error) {
-    console.log(error);
+    
 
     res.status(404).json({
       status: "error",
@@ -216,7 +216,7 @@ export async function getMostRecentLoggedSymptom(req, res, _next) {
             });
         }
     } catch (error) {
-        console.log(error);
+        
 
         res.status(500).json({
             status: "error",

@@ -1,3 +1,10 @@
+/**
+ * Filename: 		emailRouter.js
+ * Description:
+ * Developed By: 	Toni-Ann Neil
+ * Date: 			2024-06-03
+ */
+
 import express from "express";
 import { Email } from "../utils/email.js";
 

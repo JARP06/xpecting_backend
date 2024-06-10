@@ -1,3 +1,11 @@
+/**
+ * Filename: 		emailController.js
+ * Description:
+ * Developed By: 	Toni-Ann Neil
+ * Date: 			2024-06-03
+ */
+
+
 import nodemailer from 'nodemailer';
 import { pool } from '../database/dbConnection.js';
 
@@ -47,8 +55,8 @@ export async function sendEmail(req, res) {
 
         const carerCategory = carerResult[0][0].category;
 
-        console.log('Carer ID:', carer_id);
-        console.log('Carer Category:', carerCategory);
+        
+        
 
         if (!carerCategory) {
             throw new Error('Carer category not found for ID: ' + carer_id);
@@ -73,6 +81,7 @@ export async function sendEmail(req, res) {
             to: userEmail,
             subject: `Appointment Confirmation for ${carerCategory} on ${scheduledTimeFormatted}`,
             html: `
+                <img src="/assets/Xpecting (Small).png" alt="Xpecting Logo">
                 <p>Dear ${f_name} ${l_name},</p>
                 <p>This email confirms your upcoming appointment for ${carerCategory} scheduled for ${scheduledTimeFormatted}.</p>
                 <p>We appreciate you choosing Xpecting.</p>
@@ -82,7 +91,7 @@ export async function sendEmail(req, res) {
         };
 
         await transporter.sendMail(mailOptions);
-        console.log('Email sent successfully');
+        
     } catch (error) {
         console.error('Error sending email:', error.message);
     }

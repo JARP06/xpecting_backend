@@ -1,13 +1,11 @@
-/**
- * Filename: 		appointmentController.js
- * Description:
- * Developed By: 	Toni-Ann Neil
- * Date: 			2024-05-10
- */
+// Filename: appointmentController.js
+// Description:
+// Developed By: Toni-Ann Neil
+// Date: 2024-05-10
 
 // import
-import {pool} from "../database/dbConnection.js";
-import { sendEmail } from "./emailController.js"; 
+import { pool } from "../database/dbConnection.js";
+import { sendEmail } from "./emailController.js";
 
 // create appointment
 import { Email } from "../utils/email.js";
@@ -18,15 +16,13 @@ export async function createAppointment(req, res) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const emailSender = new sendEmail(req.user.email);
+    // Call sendEmail directly
+    await sendEmail(req, res);
 
     const { user_id, carer_id, scheduled_time, note } = req.body;
 
-    // Your appointment creation logic goes here
-
     // Assuming appointment creation is successful, send the email
     const emailContent = `<p>Your email content goes here</p>`;
-    await emailSender.sendMail(emailContent, "Appointment Confirmation");
 
     res.status(201).json({
       status: "success",
@@ -41,7 +37,6 @@ export async function createAppointment(req, res) {
     });
   }
 }
-
 
 // get all appointments
 export async function allAppointments(req, res) {
@@ -144,7 +139,7 @@ export async function singleAppointment(req, res, _next) {
       });
     }
   } catch (error) {
-    console.log(error);
+    
 
     res.status(404).json({
       status: "error",
@@ -179,7 +174,7 @@ export async function updateAppointment(req, res, _next) {
       });
     }
   } catch (error) {
-    console.log(error);
+    
 
     res.status(404).json({
       status: "error",
@@ -215,7 +210,7 @@ export async function getUpcomingAppointment(req, res, _next) {
       });
     }
   } catch (error) {
-    console.log(error);
+    
 
     res.status(500).json({
       status: "error",
@@ -246,7 +241,7 @@ export async function deleteAppointment(req, res, _next) {
       });
     }
   }catch(error){
-    console.log(error);
+    
 
     res.status(404).json({
       status: "error",
