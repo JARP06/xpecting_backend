@@ -75,21 +75,27 @@ export async function sendEmail(req, res) {
                 pass: process.env.NODE_ENV !== "production" ? process.env.MAILTRAP_PASS : process.env.EMAIL_PASS,
             },
         });
-
         const mailOptions = {
             from: 'Xpecting Appointments <appointments@xpecting.com>',
             to: userEmail,
             subject: `Appointment Confirmation for ${carerCategory} on ${scheduledTimeFormatted}`,
             html: `
-                <img src="/assets/Xpecting (Small).png" alt="Xpecting Logo">
+                <img src="cid:xpecting_logo" alt="Xpecting Logo">
                 <p>Dear ${f_name} ${l_name},</p>
                 <p>This email confirms your upcoming appointment for ${carerCategory} scheduled for ${scheduledTimeFormatted}.</p>
                 <p>We appreciate you choosing Xpecting.</p>
                 <p>Sincerely,</p>
                 <p>The Xpecting Appointments Team</p>
             `,
+            attachments: [
+                {
+                    filename: 'Xpecting (Small).png',
+                    path: 'assets/Xpecting (Small).png', 
+                    cid: 'xpecting_logo' // same cid value as in the html img src
+                }
+            ]
         };
-
+        
         await transporter.sendMail(mailOptions);
         
     } catch (error) {

@@ -48,14 +48,10 @@ emailRouter.post("/new-registration-mail", async (req, res) => {
 
     const emailContent = `
       <p>Dear ${first_name} ${last_name},</p>
-      <p>Welcome to Chatham Evening School! We are thrilled to have you join our vibrant community of learners.</p>
-      <p>Your registration marks the beginning of an enriching educational journey filled with opportunities for growth, discovery, and success.</p>
-      <p>At Chatham Evening School, we are committed to providing you with a supportive environment where you can thrive academically, socially, and personally.</p>
-      <p>Once again, welcome to Chatham Evening School! Get ready to embark on an unforgettable educational journey filled with endless possibilities.</p>
-      <p>Best regards,<br>Chatham Evening School</p>
+      
     `;
 
-    await emailSender.sendMail(emailContent, "Welcome to Chatham Evening School - Get Ready to Dive into an Exciting Journey!");
+    await emailSender.sendMail(emailContent, "Thank you for registering");
 
     res.status(200).json({ message: "Registration email sent successfully" });
   } catch (error) {
